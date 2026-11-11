@@ -11,6 +11,7 @@ The audience is people who don't read test code: managers, analysts, new QA engi
 3. The agent will:
    - inspect the stack and test layout,
    - write a parser that extracts tests into JSON,
+   - translate every code step into a plain-English sentence (see below),
    - build the web app and embed the data,
    - verify counts and the page in headless Chrome.
 4. Open `test-explorer/index.html` (double-click, no server needed). To refresh after tests change: `node test-explorer/build.mjs`.
@@ -26,11 +27,27 @@ The page includes:
 - **Overview**: counters (files, scenarios, checks), a per-area bar chart split into positive / negative / permission, HTTP-method summary, a "How to read" block
 - **Left tree** of areas and suites with counters
 - **Suite cards** with badges, file path, tags and "before every test" setup
-- **Collapsible scenarios** with colored Given / When / Then steps, highlighted `"values"` and `<placeholders>`, full Examples and data tables
+- **Collapsible scenarios** with colored Given / When / Then steps written in plain English, highlighted `"values"` and `<placeholders>`, full Examples and data tables
+- **"Show code" toggle** that reveals the original source line under every step, so readers can verify the translation
 - **Search** across names, steps, tags and Examples values, with highlighting
 - **Filters** by kind (all / positive / negative / permission)
 - Light and dark themes, responsive layout, **no CDN or external libraries**, fully offline
 - All UI text in **English**; test titles are shown exactly as written in the source
+
+## Code to plain English
+
+Non-Gherkin tests are code, so the prompt (Step 2b) makes the agent translate each step from the AST into a sentence a non-programmer can read. Translation is rule-based and never guessed:
+
+| Test code | Shown as |
+|---|---|
+| `expect(page.getByRole("heading", { name: "My Profile" })).toBeVisible()` | **"My Profile" heading is visible** |
+| `practice.checkbox("Option1").check()` | **Check checkbox "Option1"** |
+| `expect(page.getByText(message)).not.toBeVisible()` | **Text `<message>` is not visible** |
+| `page.goto("/user/profile")` | **Open "/user/profile"** |
+| `jest.mock("@/utils/form")` | **Mock module "@/utils/form"** |
+| `expect(result).toEqual("In office")` | **result equals "In office"** |
+
+Locators that live in Page Objects are resolved to what they really select, Page Object methods get an expandable "what this method does" list, and anything the rules don't cover falls back to `Call <name> with <args>` with the raw code kept visible.
 
 ## Supported test frameworks
 

@@ -48,6 +48,21 @@ For every test compute:
   - `pos`: everything else.
   The keyword lists are heuristics tuned to one project. **Re-derive them from the real test names of the project you are analyzing** (list the most frequent words in test titles first). State in the UI and in your final report that the classification is approximate.
 
+## Step 2b. Plain-language steps (mandatory for non-Gherkin code)
+
+Raw code in a step (`await expect(page.getByRole("button", { name: "Sign In" })).toBeVisible()`) defeats the purpose of the page. Every step must be **translated into a plain English sentence that a non-programmer can read**, derived mechanically from the code's AST, never guessed:
+
+1. **Parse, don't regex.** Work on the AST (TypeScript compiler API, Python `ast`, etc.). Resolve each call by its *function*: action, locator, assertion, mock, helper call.
+2. **Actions** become verb phrases: `click(x)` -> `Click <x>`; `fill(v)` -> `Enter <v> into <x>`; `check/uncheck`, `selectOption(v)` -> `Select <v> in <x>`; `press(k)`; `hover`; `goto(url)` -> `Open <url>`; `reload`; file upload; waits (`Wait for ...`); HTTP calls -> `Send GET request to "/path" with body ...`.
+3. **Locators** become descriptions of what a user sees, not selectors: `getByRole("button", {name: "Sign In"})` -> `"Sign In" button`; `getByText("X")` -> `text "X"`; `getByLabel("X")` -> `element labeled "X"` (do not call it a field or button unless the code says so); `getByPlaceholder`; `getByTestId`; `locator("css")` -> `element "css"`; `.first()/.nth(1)/.last()` -> `first / 2nd / last`; `.filter({hasText})` -> `containing "..."`; chains -> `outer › inner`.
+4. **Resolve names through the project.** If a locator is a Page Object property (`this.submitButton = page.getByLabel("Submit")`), show the resolved description instead of the identifier. For Page Object methods show `On the <page name>: <method name humanized> <args>` and keep an expandable "what this method does" list built by applying the same rules to the method body.
+5. **Assertions** become statements of expected state: `toBeVisible` -> `<x> is visible`; `not.toBeVisible` -> `is not visible`; `toHaveText("t")` -> `has text "t"`; `toHaveValue`; `toBeChecked`; `toHaveCount(n)` -> `appears n time(s)`; `toHaveURL`; `toHaveTitle`; status codes -> `response status equals 403`; unit-test matchers (`toEqual`, `toBeNull`, `toHaveBeenCalledWith`, `rejects.toThrow`) -> `... equals ...`, `... is null`, `... was called with ...`, `... rejects with ...`. Unknown matchers fall back to the humanized matcher name plus its arguments.
+6. **Values:** string literals in double quotes; numbers as is; a constant that resolves to a literal in the same file is shown as that literal; any other variable as a `<placeholder>`.
+7. **Control flow:** loops -> `For each <item> in <array literal if resolvable>`; conditions -> `If <cond>` / `Else` with `===` rendered as `is`, `&&` as `and`; `test.step("title")` -> `Step: title`.
+8. **Mocks / setup (unit tests):** `jest.mock("m")` -> `Mock module "m"`; `fn.mockResolvedValue(v)` -> `Make fn resolve with v`; calling the unit under test -> `Call <function name humanized> with <args>`.
+9. **Keep the original.** Store the raw code of every step next to its sentence; show it as a tooltip and via a "Show code" toggle in the UI. Never drop it, so readers can verify the translation.
+10. **No invention.** If a construct is not covered by the rules, show the humanized call (`Call <name> with <args>`) rather than a made-up description, and keep the raw code visible.
+
 ## Step 3. Web application
 
 Build **one self-contained HTML file** (no server, no CDN): a `template.html` plus a build script that embeds the JSON into `index.html`. When embedding the JSON:
@@ -58,7 +73,7 @@ Required UI features:
 1. **Overview (home):** cards (files, scenarios, checks including Examples, positive/negative/permission counts); a bar chart per area, split by pos/neg/perm, with a caption saying what each area covers; a summary by HTTP method; a "How to read" block.
 2. **Left tree:** areas, then suites, with counters; clicking opens the section.
 3. **Suite card:** title, method badges, file path, tags, `Background` ("Before every test").
-4. **Scenario** (collapsible): name, tags, a kind badge (positive/negative/permission), number of variants; inside, Given/When/Then steps in different colors, `"quoted"` values and `<placeholders>` highlighted, Examples tables and data tables shown in full.
+4. **Scenario** (collapsible): name, tags, a kind badge (positive/negative/permission), number of variants; inside, Given/When/Then steps (plain-language sentences from Step 2b, with a "Show code" toggle) in different colors, `"quoted"` values and `<placeholders>` highlighted, Examples tables and data tables shown in full.
 5. **Search** across names, steps, tags (task IDs such as `BDDTEST-LAM-1237`) and Examples values, with match highlighting.
 6. **Filters** by kind: all / positive / negative / permission.
 7. Light and dark theme (system default plus a toggle), responsive layout for phones, no horizontal page scroll.
