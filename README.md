@@ -18,6 +18,26 @@ The audience is people who don't read test code: managers, analysts, new QA engi
 
 If the agent has no file access, attach the test folder structure and a few sample test files.
 
+## Preview
+
+Generated from a Playwright test suite for a public QA practice page (14 files, 57 scenarios, 72 checks).
+
+**Overview**: counters, per-area bars, cross-check with the framework's own list command.
+
+![Overview](images/overview.png)
+
+**Plain-English steps** with the original code revealed by the "Show code" toggle:
+
+![Plain-English steps with code](images/plain-english-with-code.png)
+
+**Parametrized tests** expand into Examples tables, and search highlights matches:
+
+![Examples table](images/examples-table.png)
+
+**Dark theme** (also follows the system setting):
+
+![Dark theme](images/dark-theme.png)
+
 ## What you get
 
 A new `test-explorer/` folder in your project containing `build.mjs`, `template.html` and `index.html`. Existing project files are not modified and nothing is committed.
